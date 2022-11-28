@@ -30,8 +30,6 @@ function Posts() {
     setTotalPages(getPagesCount(totalCount, limit))
   })
 
-  console.log(totalPages);
-
   useEffect(() => {
     fetchPosts(limit, page)
   }, []);
