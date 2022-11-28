@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import PostList from "../components/PostList";
 import '../styles/app.css'
 import MyButton from '../components/UI/button/MyButton';
@@ -21,18 +21,34 @@ function Posts() {
   const [limit, setLimit] = useState(10)
   const [page, setPage] = useState(1);
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query)
+  const lastElement = useRef()
+  const observer = useRef()
 
 
   const [fetchPosts, isPostLoading, postError] = useFetching(async (limit, page) => {
     const response = await PostService.getAll(limit, page)
-    setPosts(response.data)
+    setPosts([...posts, ...response.data])
     const totalCount = response.headers['x-total-count']
     setTotalPages(getPagesCount(totalCount, limit))
   })
 
   useEffect(() => {
+    if (isPostLoading) return
+    if (observer.current) observer.current.disconnect()
+    let callback = (entries, observer) => {
+      if (entries[0].isIntersecting && page < totalPages) {
+        console.log('div scope');
+        setPage(page + 1)
+        console.log(entries);
+      }
+    }
+    observer.current = new IntersectionObserver(callback)
+    observer.current.observe(lastElement.current)
+  }, [isPostLoading])
+
+  useEffect(() => {
     fetchPosts(limit, page)
-  }, []);
+  }, [page]);
 
   const createPost = (newPost) => {
     setPosts([...posts, newPost])
@@ -45,7 +61,6 @@ function Posts() {
 
   const changePage = (page) => {
     setPage(page)
-    fetchPosts(limit, page)
   }
 
   return (
@@ -62,9 +77,10 @@ function Posts() {
       {postError &&
         <h1>Произошла ошибка {postError}</h1>
       }
-      {isPostLoading
-        ? <Loader />
-        : <PostList remove={removePost} posts={sortedAndSearchedPosts} title={'post list 1'} />
+      <PostList remove={removePost} posts={sortedAndSearchedPosts} title={'post list 1'} />
+      <div ref={lastElement} style={{ height: '20px', background: 'red' }}></div>
+      {isPostLoading &&
+        <Loader />
       }
       <Pagination
         page={page}

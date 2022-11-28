@@ -9,7 +9,6 @@ import { AuthContext } from './context/context';
 const AppRouter = () => {
 
   const { isAuth, setIsAuth } = useContext(AuthContext)
-  console.log(isAuth);
   return (
 
     isAuth
