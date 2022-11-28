@@ -28,14 +28,34 @@
 .post-enter {
   opacity: 0;
 }
+
 .post-enter-active {
   opacity: 1;
   transition: opacity 500ms ease-in;
 }
+
 .post-exit {
   opacity: 1;
 }
+
 .post-exit-active {
   opacity: 0;
   transition: opacity 500ms ease-in;
+}
+
+.pages__wrapper {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1%;
+  margin-bottom: 1rem;
+}
+
+.pages {
+  cursor: pointer;
+  padding: 1rem;
+  border: 1px solid teal
+}
+
+.pages__current {
+  border: 3px solid orange;
 }
