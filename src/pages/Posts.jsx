@@ -11,6 +11,8 @@ import Loader from "../components/UI/loader/Loader";
 import { useFetching } from '../hooks/useFetching';
 import { getPagesCount } from '../utils/pages';
 import Pagination from "../components/UI/pagination/pagination";
+import { useObserver } from "../hooks/useObserver";
+import MySelect from "../components/UI/select/MySelect";
 
 function Posts() {
 
@@ -22,8 +24,6 @@ function Posts() {
   const [page, setPage] = useState(1);
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query)
   const lastElement = useRef()
-  const observer = useRef()
-
 
   const [fetchPosts, isPostLoading, postError] = useFetching(async (limit, page) => {
     const response = await PostService.getAll(limit, page)
@@ -32,23 +32,13 @@ function Posts() {
     setTotalPages(getPagesCount(totalCount, limit))
   })
 
-  useEffect(() => {
-    if (isPostLoading) return
-    if (observer.current) observer.current.disconnect()
-    let callback = (entries, observer) => {
-      if (entries[0].isIntersecting && page < totalPages) {
-        console.log('div scope');
-        setPage(page + 1)
-        console.log(entries);
-      }
-    }
-    observer.current = new IntersectionObserver(callback)
-    observer.current.observe(lastElement.current)
-  }, [isPostLoading])
+  useObserver(lastElement, page < totalPages, isPostLoading, () => {
+    setPage(page + 1)
+  })
 
   useEffect(() => {
     fetchPosts(limit, page)
-  }, [page]);
+  }, [page, limit]);
 
   const createPost = (newPost) => {
     setPosts([...posts, newPost])
@@ -74,11 +64,24 @@ function Posts() {
         filter={filter}
         setFilter={setFilter}
       />
+      <MySelect
+        value={limit}
+        onChange={(value) => { setLimit(value) }}
+        defaultValue='Кол-во элементов на странице'
+        options={[
+          { value: 5, name: '5' },
+          { value: 10, name: '10' },
+          { value: 25, name: '25' },
+          { value: -1, name: 'Показать все' }
+        ]}
+      >
+
+      </MySelect>
       {postError &&
         <h1>Произошла ошибка {postError}</h1>
       }
       <PostList remove={removePost} posts={sortedAndSearchedPosts} title={'post list 1'} />
-      <div ref={lastElement} style={{ height: '20px', background: 'red' }}></div>
+      <div ref={lastElement} ></div>
       {isPostLoading &&
         <Loader />
       }
